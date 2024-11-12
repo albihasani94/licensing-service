@@ -1,14 +1,22 @@
 package com.optimagrowth.license.service;
 
 import com.optimagrowth.license.model.License;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.Random;
 
 @Service
 public class LicenseService {
 
+    private final MessageSource messageSource;
+
     private final Random random = new Random();
+
+    public LicenseService(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
 
     public License getLicense(String licenseId, String organizationId) {
         License license = new License();
@@ -22,11 +30,11 @@ public class LicenseService {
         return license;
     }
 
-    public String createLicense(License license, String organizationId) {
+    public String createLicense(License license, String organizationId, Locale locale) {
         String responseMessage = null;
         if (license != null) {
             license.setOrganizationId(organizationId);
-            responseMessage = "This is the post and the object is: %s".formatted(license);
+            responseMessage = messageSource.getMessage("license.create.message", null, locale).formatted(license);
         }
         return responseMessage;
     }
@@ -35,7 +43,7 @@ public class LicenseService {
         String responseMessage = null;
         if (license != null) {
             license.setOrganizationId(organizationId);
-            responseMessage = "This is the put and the object is: %s".formatted(license);
+            responseMessage = messageSource.getMessage("license.update.message", null, null).formatted(license);
         }
         return responseMessage;
     }
