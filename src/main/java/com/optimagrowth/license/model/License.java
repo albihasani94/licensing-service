@@ -1,13 +1,15 @@
 package com.optimagrowth.license.model;
 
-public final class License {
+import org.springframework.hateoas.RepresentationModel;
+
+public class License extends RepresentationModel<License> {
     private int id;
     private String licenseId;
     private String description;
     private String organizationId;
     private String productName;
     private String licenseType;
-    
+
     public int getId() {
         return id;
     }
