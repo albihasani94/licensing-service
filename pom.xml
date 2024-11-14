@@ -80,16 +80,9 @@
 				<executions>
 					<execution>
 						<id>build</id>
-						<phase>package</phase>
+						<phase>install</phase>
 						<goals>
 							<goal>build</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>push</goal>
 						</goals>
 					</execution>
 				</executions>
