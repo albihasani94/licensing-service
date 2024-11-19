@@ -1,28 +1,28 @@
 package com.optimagrowth.license.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.springframework.hateoas.RepresentationModel;
 
+@Entity
 public class License extends RepresentationModel<License> {
-    private int id;
-    private String licenseId;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long licenseId;
     private String description;
-    private String organizationId;
+    private Long organizationId;
     private String productName;
     private String licenseType;
+    private String comment;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getLicenseId() {
+    public Long getLicenseId() {
         return licenseId;
     }
 
-    public void setLicenseId(String licenseId) {
+    public void setLicenseId(Long licenseId) {
         this.licenseId = licenseId;
     }
 
@@ -34,11 +34,11 @@ public class License extends RepresentationModel<License> {
         this.description = description;
     }
 
-    public String getOrganizationId() {
+    public Long getOrganizationId() {
         return organizationId;
     }
 
-    public void setOrganizationId(String organizationId) {
+    public void setOrganizationId(Long organizationId) {
         this.organizationId = organizationId;
     }
 
@@ -58,15 +58,28 @@ public class License extends RepresentationModel<License> {
         this.licenseType = licenseType;
     }
 
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public License withComment(String comment) {
+        this.setComment(comment);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "License{" +
-                "id=" + id +
-                ", licenseId='" + licenseId + '\'' +
+                "licenseId=" + licenseId +
                 ", description='" + description + '\'' +
-                ", organizationId='" + organizationId + '\'' +
+                ", organizationId=" + organizationId +
                 ", productName='" + productName + '\'' +
                 ", licenseType='" + licenseType + '\'' +
+                ", comment='" + comment + '\'' +
                 '}';
     }
 }

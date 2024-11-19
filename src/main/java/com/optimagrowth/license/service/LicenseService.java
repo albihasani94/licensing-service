@@ -1,54 +1,44 @@
 package com.optimagrowth.license.service;
 
+import com.optimagrowth.license.config.ServiceConfig;
 import com.optimagrowth.license.model.License;
+import com.optimagrowth.license.repository.LicenseRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
-import java.util.Locale;
-import java.util.Random;
+import java.util.function.Supplier;
 
 @Service
 public class LicenseService {
 
     private final MessageSource messageSource;
+    private final LicenseRepository licenseRepository;
+    private final ServiceConfig serviceConfig;
 
-    private final Random random = new Random();
-
-    public LicenseService(MessageSource messageSource) {
+    public LicenseService(MessageSource messageSource, LicenseRepository licenseRepository, ServiceConfig serviceConfig) {
         this.messageSource = messageSource;
+        this.licenseRepository = licenseRepository;
+        this.serviceConfig = serviceConfig;
     }
 
-    public License getLicense(String licenseId, String organizationId) {
-        License license = new License();
-        license.setId(random.nextInt(1000));
-        license.setLicenseId(licenseId);
-        license.setOrganizationId(organizationId);
-        license.setDescription("Software product");
-        license.setProductName("OStock");
-        license.setLicenseType("full");
-
-        return license;
+    public License getLicense(Long licenseId) {
+        return licenseRepository.findById(licenseId)
+                .map(license -> license.withComment(serviceConfig.getProperty()))
+                .orElseThrow(licenseNotFoundException(licenseId));
     }
 
-    public String createLicense(License license, String organizationId, Locale locale) {
-        String responseMessage = null;
-        if (license != null) {
-            license.setOrganizationId(organizationId);
-            responseMessage = messageSource.getMessage("license.create.message", null, locale).formatted(license);
-        }
-        return responseMessage;
+    private Supplier<IllegalArgumentException> licenseNotFoundException(Long licenseId) {
+        return () -> new IllegalArgumentException(String.format(messageSource.getMessage("license.search.error.message", null, null), licenseId));
     }
 
-    public String updateLicense(License license, String organizationId) {
-        String responseMessage = null;
-        if (license != null) {
-            license.setOrganizationId(organizationId);
-            responseMessage = messageSource.getMessage("license.update.message", null, null).formatted(license);
-        }
-        return responseMessage;
+    public License createOrUpdate(License license) {
+        licenseRepository.save(license);
+        return license.withComment(serviceConfig.getProperty());
     }
 
-    public String deleteLicense(String licenseId, String organizationId) {
-        return "Deleting license with id %s for the organization %s".formatted(licenseId, organizationId);
+    public String deleteLicense(Long licenseId) {
+        licenseRepository.deleteById(licenseId);
+        return String.format(messageSource.getMessage("license.delete.message", null, null), licenseId);
+
     }
 }
