@@ -2,6 +2,7 @@ package com.optimagrowth.license.controller;
 
 import com.optimagrowth.license.model.License;
 import com.optimagrowth.license.service.LicenseService;
+import com.optimagrowth.license.util.ClientType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,11 @@ public class LicenseController {
                         .withRel("deleteLicense"));
 
         return ResponseEntity.ok(license);
+    }
+
+    @GetMapping("/{licenseId}/{clientType}")
+    public License getLicenseWithClientType(@PathVariable Long licenseId, @PathVariable ClientType clientType) {
+        return licenseService.getLicenseByClientType(licenseId, clientType);
     }
 
     @PutMapping

@@ -2,7 +2,9 @@ package com.optimagrowth.license.service;
 
 import com.optimagrowth.license.config.ServiceConfig;
 import com.optimagrowth.license.model.License;
+import com.optimagrowth.license.model.Organization;
 import com.optimagrowth.license.repository.LicenseRepository;
+import com.optimagrowth.license.util.ClientType;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
@@ -40,5 +42,24 @@ public class LicenseService {
         licenseRepository.deleteById(licenseId);
         return String.format(messageSource.getMessage("license.delete.message", null, null), licenseId);
 
+    }
+
+    public License getLicenseByClientType(Long licenseId, ClientType clientType) {
+        License license = licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
+
+        Organization organization = retrieveOrganizationInfo(license.getOrganizationId(), clientType);
+        if (organization != null) {
+            license.setOrganizationName(organization.getName());
+            license.setContactName(organization.getContactName());
+            license.setContactEmail(organization.getContactEmail());
+            license.setContactPhone(organization.getContactPhone());
+        }
+
+        return license;
+    }
+
+    private Organization retrieveOrganizationInfo(Long organizationId, ClientType clientType) {
+        // FIXME: Implement retrieval by clioentType
+        return null;
     }
 }

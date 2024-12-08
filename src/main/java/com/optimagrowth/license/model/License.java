@@ -1,12 +1,11 @@
 package com.optimagrowth.license.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.persistence.*;
 import org.springframework.hateoas.RepresentationModel;
 
 @Entity
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class License extends RepresentationModel<License> {
 
     @Id
@@ -17,6 +16,14 @@ public class License extends RepresentationModel<License> {
     private String productName;
     private String licenseType;
     private String comment;
+    @Transient
+    private String organizationName;
+    @Transient
+    private String contactName;
+    @Transient
+    private String contactPhone;
+    @Transient
+    private String contactEmail;
 
     public Long getLicenseId() {
         return licenseId;
@@ -69,6 +76,38 @@ public class License extends RepresentationModel<License> {
     public License withComment(String comment) {
         this.setComment(comment);
         return this;
+    }
+
+    public String getOrganizationName() {
+        return organizationName;
+    }
+
+    public void setOrganizationName(String organizationName) {
+        this.organizationName = organizationName;
+    }
+
+    public String getContactName() {
+        return contactName;
+    }
+
+    public void setContactName(String contactName) {
+        this.contactName = contactName;
+    }
+
+    public String getContactPhone() {
+        return contactPhone;
+    }
+
+    public void setContactPhone(String contactPhone) {
+        this.contactPhone = contactPhone;
+    }
+
+    public String getContactEmail() {
+        return contactEmail;
+    }
+
+    public void setContactEmail(String contactEmail) {
+        this.contactEmail = contactEmail;
     }
 
     @Override
