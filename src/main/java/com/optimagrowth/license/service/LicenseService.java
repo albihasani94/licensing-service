@@ -1,5 +1,6 @@
 package com.optimagrowth.license.service;
 
+import com.optimagrowth.license.client.OrganizationFeignClient;
 import com.optimagrowth.license.config.ServiceConfig;
 import com.optimagrowth.license.model.License;
 import com.optimagrowth.license.model.Organization;
@@ -17,8 +18,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.optimagrowth.license.util.ClientType.DISCOVERY;
-import static com.optimagrowth.license.util.ClientType.REST;
+import static com.optimagrowth.license.util.ClientType.*;
 
 @Service
 public class LicenseService {
@@ -29,17 +29,19 @@ public class LicenseService {
     private final DiscoveryClient discoveryClient;
     private final RestClient restClient;
     private final Map<ClientType, Function<Long, Organization>> clientTypeBasedFunctions;
+    private final OrganizationFeignClient organizationFeignClient;
 
-
-    public LicenseService(MessageSource messageSource, LicenseRepository licenseRepository, ServiceConfig serviceConfig, DiscoveryClient discoveryClient, RestClient.Builder restClientBuilder) {
+    public LicenseService(MessageSource messageSource, LicenseRepository licenseRepository, ServiceConfig serviceConfig, DiscoveryClient discoveryClient, RestClient.Builder restClientBuilder, OrganizationFeignClient organizationFeignClient) {
         this.messageSource = messageSource;
         this.licenseRepository = licenseRepository;
         this.serviceConfig = serviceConfig;
         this.discoveryClient = discoveryClient;
         this.restClient = restClientBuilder.build();
+        this.organizationFeignClient = organizationFeignClient;
         this.clientTypeBasedFunctions = Map.of(
                 DISCOVERY, retrieveOrganizationInfoDiscovery(),
-                REST, retrieveOrganizationInfoRest()
+                REST, retrieveOrganizationInfoRest(),
+                FEIGN, retrieveOrganizationInfoFeign()
         );
     }
 
@@ -111,5 +113,9 @@ public class LicenseService {
 
             return restExchange.getBody();
         };
+    }
+
+    private Function<Long, Organization> retrieveOrganizationInfoFeign() {
+        return organizationFeignClient::getOrganization;
     }
 }
