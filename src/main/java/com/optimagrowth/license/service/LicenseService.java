@@ -13,7 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static com.optimagrowth.license.util.ClientType.DISCOVERY;
+import static com.optimagrowth.license.util.ClientType.REST;
 
 @Service
 public class LicenseService {
@@ -23,6 +28,8 @@ public class LicenseService {
     private final ServiceConfig serviceConfig;
     private final DiscoveryClient discoveryClient;
     private final RestClient restClient;
+    private final Map<ClientType, Function<Long, Organization>> clientTypeBasedFunctions;
+
 
     public LicenseService(MessageSource messageSource, LicenseRepository licenseRepository, ServiceConfig serviceConfig, DiscoveryClient discoveryClient, RestClient.Builder restClientBuilder) {
         this.messageSource = messageSource;
@@ -30,6 +37,10 @@ public class LicenseService {
         this.serviceConfig = serviceConfig;
         this.discoveryClient = discoveryClient;
         this.restClient = restClientBuilder.build();
+        this.clientTypeBasedFunctions = Map.of(
+                DISCOVERY, retrieveOrganizationInfoDiscovery(),
+                REST, retrieveOrganizationInfoRest()
+        );
     }
 
     public License getLicense(Long licenseId) {
@@ -56,7 +67,8 @@ public class LicenseService {
     public License getLicenseByClientType(Long licenseId, ClientType clientType) {
         License license = licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
 
-        Organization organization = retrieveOrganizationInfo(license.getOrganizationId(), clientType);
+        Organization organization = clientTypeBasedFunctions.get(clientType).apply(license.getOrganizationId());
+
         if (organization != null) {
             license.setOrganizationName(organization.getName());
             license.setContactName(organization.getContactName());
@@ -67,21 +79,37 @@ public class LicenseService {
         return license;
     }
 
-    private Organization retrieveOrganizationInfo(Long organizationId, ClientType clientType) {
-        List<ServiceInstance> instances = discoveryClient.getInstances("organization-service");
+    private Function<Long, Organization> retrieveOrganizationInfoDiscovery() {
+        return organizationId -> {
+            List<ServiceInstance> instances = discoveryClient.getInstances("organization-service");
 
-        if (instances.isEmpty()) {
-            return null;
-        }
+            if (instances.isEmpty()) {
+                return null;
+            }
 
-        String serviceUri = "%s/v1/organization/%s".formatted(instances.getFirst().getUri().toString(), organizationId);
+            String serviceUri = "%s/v1/organization/%s".formatted(instances.getFirst().getUri().toString(), organizationId);
 
-        ResponseEntity<Organization> restExchange = restClient
-                .get()
-                .uri(serviceUri)
-                .retrieve()
-                .toEntity(Organization.class);
+            ResponseEntity<Organization> restExchange = RestClient.builder().build()
+                    .get()
+                    .uri(serviceUri)
+                    .retrieve()
+                    .toEntity(Organization.class);
 
-        return restExchange.getBody();
+            return restExchange.getBody();
+        };
+    }
+
+    private Function<Long, Organization> retrieveOrganizationInfoRest() {
+        return organizationId -> {
+            String serviceUri = "http://organization-service/v1/organization/" + organizationId;
+
+            ResponseEntity<Organization> restExchange = restClient
+                    .get()
+                    .uri(serviceUri)
+                    .retrieve()
+                    .toEntity(Organization.class);
+
+            return restExchange.getBody();
+        };
     }
 }
