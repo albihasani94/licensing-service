@@ -14,11 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.function.LongFunction;
 import java.util.function.Supplier;
-
-import static com.optimagrowth.license.util.ClientType.*;
 
 @Service
 public class LicenseService {
@@ -28,7 +25,6 @@ public class LicenseService {
     private final ServiceConfig serviceConfig;
     private final DiscoveryClient discoveryClient;
     private final RestClient restClient;
-    private final Map<ClientType, Function<Long, Organization>> clientTypeBasedFunctions;
     private final OrganizationFeignClient organizationFeignClient;
 
     public LicenseService(MessageSource messageSource, LicenseRepository licenseRepository, ServiceConfig serviceConfig, DiscoveryClient discoveryClient, RestClient.Builder restClientBuilder, OrganizationFeignClient organizationFeignClient) {
@@ -38,11 +34,6 @@ public class LicenseService {
         this.discoveryClient = discoveryClient;
         this.restClient = restClientBuilder.build();
         this.organizationFeignClient = organizationFeignClient;
-        this.clientTypeBasedFunctions = Map.of(
-                DISCOVERY, retrieveOrganizationInfoDiscovery(),
-                REST, retrieveOrganizationInfoRest(),
-                FEIGN, retrieveOrganizationInfoFeign()
-        );
     }
 
     public License getLicense(Long licenseId) {
@@ -69,7 +60,13 @@ public class LicenseService {
     public License getLicenseByClientType(Long licenseId, ClientType clientType) {
         License license = licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
 
-        Organization organization = clientTypeBasedFunctions.get(clientType).apply(license.getOrganizationId());
+        var client = switch (clientType) {
+            case DISCOVERY -> retrieveOrganizationInfoDiscovery();
+            case REST -> retrieveOrganizationInfoRest();
+            case FEIGN -> retrieveOrganizationInfoFeign();
+        };
+
+        var organization = client.apply(license.getOrganizationId());
 
         if (organization != null) {
             license.setOrganizationName(organization.getName());
@@ -81,7 +78,7 @@ public class LicenseService {
         return license;
     }
 
-    private Function<Long, Organization> retrieveOrganizationInfoDiscovery() {
+    private LongFunction<Organization> retrieveOrganizationInfoDiscovery() {
         return organizationId -> {
             List<ServiceInstance> instances = discoveryClient.getInstances("organization-service");
 
@@ -101,7 +98,7 @@ public class LicenseService {
         };
     }
 
-    private Function<Long, Organization> retrieveOrganizationInfoRest() {
+    private LongFunction<Organization> retrieveOrganizationInfoRest() {
         return organizationId -> {
             String serviceUri = "http://organization-service/v1/organization/" + organizationId;
 
@@ -115,7 +112,7 @@ public class LicenseService {
         };
     }
 
-    private Function<Long, Organization> retrieveOrganizationInfoFeign() {
+    private LongFunction<Organization> retrieveOrganizationInfoFeign() {
         return organizationFeignClient::getOrganization;
     }
 }
