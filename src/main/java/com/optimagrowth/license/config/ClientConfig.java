@@ -1,6 +1,7 @@
 package com.optimagrowth.license.config;
 
 import com.optimagrowth.license.client.OrganizationClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,9 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 @Configuration
 public class ClientConfig {
 
+    @Value("${organization.base.url:http://organization-servicee}")
+    private String organizationBaseUrl;
+
     @Bean
     @LoadBalanced
     RestClient.Builder restClientBuilder() {
@@ -20,7 +24,7 @@ public class ClientConfig {
     @Bean
     OrganizationClient organizationClient() {
         RestClient client = restClientBuilder()
-                .baseUrl("http://organization-service")
+                .baseUrl(organizationBaseUrl)
                 .build();
         RestClientAdapter adapter = RestClientAdapter.create(client);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
