@@ -1,5 +1,5 @@
 package com.optimagrowth.license.util;
 
 public enum ClientType {
-    DISCOVERY, REST, FEIGN
+    DISCOVERY, REST, FEIGN, SPRING
 }

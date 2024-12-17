@@ -1,6 +1,7 @@
 package com.optimagrowth.license.service;
 
 import com.optimagrowth.license.client.OrganizationFeignClient;
+import com.optimagrowth.license.client.OrganizationHttpInterface;
 import com.optimagrowth.license.config.ServiceConfig;
 import com.optimagrowth.license.model.License;
 import com.optimagrowth.license.model.Organization;
@@ -12,6 +13,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.util.List;
 import java.util.function.LongFunction;
@@ -64,6 +67,7 @@ public class LicenseService {
             case DISCOVERY -> retrieveOrganizationInfoDiscovery();
             case REST -> retrieveOrganizationInfoRest();
             case FEIGN -> retrieveOrganizationInfoFeign();
+            case SPRING -> retrieveOrganizationInfoSpringInterface();
         };
 
         var organization = client.apply(license.getOrganizationId());
@@ -114,5 +118,16 @@ public class LicenseService {
 
     private LongFunction<Organization> retrieveOrganizationInfoFeign() {
         return organizationFeignClient::getOrganization;
+    }
+
+    private LongFunction<Organization> retrieveOrganizationInfoSpringInterface() {
+        return organizationId -> {
+            RestClient client = restClient.mutate().baseUrl("http://organization-service").build();
+            RestClientAdapter adapter = RestClientAdapter.create(client);
+            HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
+
+            OrganizationHttpInterface service = factory.createClient(OrganizationHttpInterface.class);
+            return service.getOrganization(organizationId);
+        };
     }
 }
