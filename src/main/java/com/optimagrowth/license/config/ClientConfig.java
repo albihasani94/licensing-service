@@ -12,7 +12,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 @Configuration
 public class ClientConfig {
 
-    @Value("${organization.base.url:http://organization-servicee}")
+    @Value("${organization.base.url:http://organization-service}")
     private String organizationBaseUrl;
 
     @Bean
