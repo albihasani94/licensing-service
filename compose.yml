@@ -1,8 +1,8 @@
 services:
-  database:
+  licensing_db:
     image: postgres:18-alpine
     ports:
-      - "15432:5432"
+      - "15433:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=ostock_dev
