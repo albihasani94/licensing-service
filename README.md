@@ -37,5 +37,5 @@ spring.config.import=optional:configserver:http://localhost:8071
 
 Spring Boot's Docker Compose support is already enabled via the `spring-boot-docker-compose` dependency. 
 
-Running `mvnw spring-boot:run` also launches the postgres defined on `compose.yml` and provide the scripts found on
+Running `./mvnw spring-boot:run` also launches the postgres defined on `compose.yml` and provide the scripts found on
 `./compose/` to postgres' entrypoint.
