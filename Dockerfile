@@ -24,4 +24,5 @@ COPY --from=builder /builder/extracted/application/ ./
 # Start the application jar with CDS enabled - this is not the uber jar used by the builder
 # This jar only contains application code and references to the extracted jar files
 # This layout is efficient to start up and CDS friendly
-ENTRYPOINT ["java", "-XX:SharedArchiveFile=application.jsa", "-jar", "application.jar"]
+#ENTRYPOINT ["java", "-XX:SharedArchiveFile=application.jsa", "-jar", "application.jar"]
+ENTRYPOINT ["java", "-jar", "application.jar"]
