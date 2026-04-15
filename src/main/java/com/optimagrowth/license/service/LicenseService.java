@@ -9,6 +9,7 @@ import com.optimagrowth.license.repository.LicenseRepository;
 import com.optimagrowth.license.util.ClientType;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.ServiceInstance;
@@ -69,6 +70,7 @@ public class LicenseService {
 
     @CircuitBreaker(name = "licenseByClientType", fallbackMethod = "licenseByClientTypeFallback")
     @Bulkhead(name = "bulkheadLicenseByClientType", fallbackMethod = "licenseByClientTypeFallback")
+    @Retry(name = "retryLicenseByClientType", fallbackMethod = "licenseByClientTypeFallback")
     public License getLicenseByClientType(Long licenseId, ClientType clientType) {
         License license = licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
 
@@ -92,7 +94,7 @@ public class LicenseService {
     }
 
     private License licenseByClientTypeFallback(Long licenseId, ClientType clientType, Throwable throwable) {
-        LOG.info("Circuit Breaker open, reverting to fallback.");
+        LOG.info("Something went wrong, reverting to fallback.");
         return licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
     }
 
