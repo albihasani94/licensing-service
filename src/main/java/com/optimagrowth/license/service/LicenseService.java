@@ -7,6 +7,7 @@ import com.optimagrowth.license.model.License;
 import com.optimagrowth.license.model.Organization;
 import com.optimagrowth.license.repository.LicenseRepository;
 import com.optimagrowth.license.util.ClientType;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class LicenseService {
     }
 
     @CircuitBreaker(name = "licenseByClientType", fallbackMethod = "licenseByClientTypeFallback")
+    @Bulkhead(name = "bulkheadLicenseByClientType", fallbackMethod = "licenseByClientTypeFallback")
     public License getLicenseByClientType(Long licenseId, ClientType clientType) {
         License license = licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
 
