@@ -7,6 +7,9 @@ import com.optimagrowth.license.model.License;
 import com.optimagrowth.license.model.Organization;
 import com.optimagrowth.license.repository.LicenseRepository;
 import com.optimagrowth.license.util.ClientType;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.MessageSource;
@@ -20,6 +23,8 @@ import java.util.function.Supplier;
 
 @Service
 public class LicenseService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LicenseService.class);
 
     private final MessageSource messageSource;
     private final LicenseRepository licenseRepository;
@@ -39,6 +44,7 @@ public class LicenseService {
         this.organizationClient = organizationClient;
     }
 
+    @CircuitBreaker(name = "licenseById")
     public License getLicense(Long licenseId) {
         return licenseRepository.findById(licenseId)
                 .map(license -> license.withComment(serviceConfig.getProperty()))
@@ -60,6 +66,7 @@ public class LicenseService {
 
     }
 
+    @CircuitBreaker(name = "licenseByClientType", fallbackMethod = "licenseByClientTypeFallback")
     public License getLicenseByClientType(Long licenseId, ClientType clientType) {
         License license = licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
 
@@ -80,6 +87,11 @@ public class LicenseService {
         }
 
         return license;
+    }
+
+    private License licenseByClientTypeFallback(Long licenseId, ClientType clientType, Throwable throwable) {
+        LOG.info("Circuit Breaker open, reverting to fallback.");
+        return licenseRepository.findById(licenseId).orElseThrow(licenseNotFoundException(licenseId));
     }
 
     private LongFunction<Organization> retrieveOrganizationInfoDiscovery() {
