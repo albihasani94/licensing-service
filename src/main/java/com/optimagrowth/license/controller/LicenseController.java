@@ -4,6 +4,7 @@ import com.optimagrowth.license.model.License;
 import com.optimagrowth.license.service.LicenseService;
 import com.optimagrowth.license.util.ClientType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -20,7 +21,8 @@ public class LicenseController {
     }
 
     @GetMapping("/{licenseId}")
-    ResponseEntity<License> getLicense(@PathVariable Long licenseId) {
+    @PreAuthorize("hasAnyRole('user', 'admin')")
+    public ResponseEntity<License> getLicense(@PathVariable Long licenseId) {
         var license = licenseService.getLicense(licenseId);
 
         license.add(linkTo(methodOn(LicenseController.class)
@@ -40,21 +42,25 @@ public class LicenseController {
     }
 
     @GetMapping("/{licenseId}/{clientType}")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public License getLicenseWithClientType(@PathVariable Long licenseId, @PathVariable ClientType clientType) {
         return licenseService.getLicenseByClientType(licenseId, clientType);
     }
 
     @PutMapping
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<License> updateLicense(@RequestBody License license) {
         return ResponseEntity.ok(licenseService.createOrUpdate(license));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<License> createLicense(@RequestBody License license) {
         return ResponseEntity.ok(licenseService.createOrUpdate(license));
     }
 
     @DeleteMapping(value = "/{licenseId}")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<String> deleteLicense(@PathVariable("licenseId") Long licenseId) {
         return ResponseEntity.ok(licenseService.deleteLicense(licenseId));
     }
