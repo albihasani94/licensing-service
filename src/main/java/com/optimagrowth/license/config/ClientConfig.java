@@ -8,15 +8,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.AbstractOAuth2Token;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.time.Duration;
-import java.util.Optional;
 
 @Configuration
 public class ClientConfig {
@@ -61,21 +57,16 @@ public class ClientConfig {
     }
 
     @Bean
-    ClientHttpRequestInterceptor bearerTokenRelayRestClientInterceptor() {
-        return (request, body, execution) -> {
-            currentBearerToken().ifPresent(request.getHeaders()::setBearerAuth);
-            return execution.execute(request, body);
-        };
+    BearerTokenResolver bearerTokenResolver() {
+        return new BearerTokenResolver();
     }
 
-    private Optional<String> currentBearerToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getCredentials() instanceof AbstractOAuth2Token token) {
-            return Optional.of(token.getTokenValue());
-        }
-
-        return Optional.empty();
+    @Bean
+    ClientHttpRequestInterceptor bearerTokenRelayRestClientInterceptor(BearerTokenResolver bearerTokenResolver) {
+        return (request, body, execution) -> {
+            bearerTokenResolver.currentBearerToken().ifPresent(request.getHeaders()::setBearerAuth);
+            return execution.execute(request, body);
+        };
     }
 
 }

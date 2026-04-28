@@ -1,5 +1,6 @@
 package com.optimagrowth.license.config;
 
+import feign.RequestTemplate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.net.URI;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,6 +27,9 @@ class ClientConfigTest {
     private static final String BEARER_TOKEN = "Bearer " + TOKEN_VALUE;
 
     private final ClientConfig clientConfig = new ClientConfig();
+    private final BearerTokenResolver bearerTokenResolver = new BearerTokenResolver();
+    private final OrganizationFeignClientConfiguration feignClientConfiguration =
+            new OrganizationFeignClientConfiguration();
 
     @AfterEach
     void clearSecurityContext() {
@@ -49,6 +54,37 @@ class ClientConfigTest {
         assertThat(request.getHeaders()).doesNotContainKey(HttpHeaders.AUTHORIZATION);
     }
 
+    @Test
+    void feignInterceptorRelaysJwtBearerToken() {
+        authenticateWithJwt();
+
+        RequestTemplate requestTemplate = applyFeignInterceptor();
+
+        assertThat(requestTemplate.headers())
+                .containsEntry(HttpHeaders.AUTHORIZATION, List.of(BEARER_TOKEN));
+    }
+
+    @Test
+    void feignInterceptorReplacesExistingAuthorizationHeader() {
+        authenticateWithJwt();
+        RequestTemplate requestTemplate = new RequestTemplate();
+        requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer stale-token");
+
+        applyFeignInterceptor(requestTemplate);
+
+        assertThat(requestTemplate.headers())
+                .containsEntry(HttpHeaders.AUTHORIZATION, List.of(BEARER_TOKEN));
+    }
+
+    @Test
+    void feignInterceptorDoesNotAddAuthorizationWhenAuthenticationHasNoBearerToken() {
+        authenticateWithoutBearerToken();
+
+        RequestTemplate requestTemplate = applyFeignInterceptor();
+
+        assertThat(requestTemplate.headers()).doesNotContainKey(HttpHeaders.AUTHORIZATION);
+    }
+
     private void authenticateWithJwt() {
         Jwt jwt = Jwt.withTokenValue(TOKEN_VALUE)
                 .header("alg", "none")
@@ -64,7 +100,8 @@ class ClientConfigTest {
     }
 
     private MockClientHttpRequest applyRestClientInterceptor() throws Exception {
-        ClientHttpRequestInterceptor interceptor = clientConfig.bearerTokenRelayRestClientInterceptor();
+        ClientHttpRequestInterceptor interceptor =
+                clientConfig.bearerTokenRelayRestClientInterceptor(bearerTokenResolver);
         MockClientHttpRequest request = new MockClientHttpRequest(
                 HttpMethod.GET,
                 URI.create("http://organization-service"));
@@ -73,7 +110,20 @@ class ClientConfigTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             return request;
         }
+    }
 
+    private RequestTemplate applyFeignInterceptor() {
+        RequestTemplate requestTemplate = new RequestTemplate();
+
+        applyFeignInterceptor(requestTemplate);
+
+        return requestTemplate;
+    }
+
+    private void applyFeignInterceptor(RequestTemplate requestTemplate) {
+        feignClientConfiguration
+                .organizationFeignBearerTokenRelayInterceptor(bearerTokenResolver)
+                .apply(requestTemplate);
     }
 
     private String authorizationHeader(MockClientHttpRequest request) {
