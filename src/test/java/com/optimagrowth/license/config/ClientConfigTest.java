@@ -51,7 +51,7 @@ class ClientConfigTest {
 
         MockClientHttpRequest request = applyRestClientInterceptor();
 
-        assertThat(request.getHeaders()).doesNotContainKey(HttpHeaders.AUTHORIZATION);
+        assertThat(authorizationHeader(request)).isNull();
     }
 
     @Test
