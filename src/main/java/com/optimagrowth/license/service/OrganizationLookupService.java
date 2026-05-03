@@ -2,6 +2,7 @@ package com.optimagrowth.license.service;
 
 import com.optimagrowth.license.client.OrganizationClient;
 import com.optimagrowth.license.client.OrganizationFeignClient;
+import com.optimagrowth.license.config.ClientConfig;
 import com.optimagrowth.license.model.Organization;
 import com.optimagrowth.license.util.ClientType;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
@@ -10,6 +11,7 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +32,12 @@ public class OrganizationLookupService {
     private final OrganizationClient organizationClient;
     private final RestClient discoveryRestClient;
 
-    public OrganizationLookupService(DiscoveryClient discoveryClient, RestClient.Builder restClientBuilder, OrganizationFeignClient organizationFeignClient, OrganizationClient organizationClient, RestClient discoveryRestClient) {
+    public OrganizationLookupService(
+            DiscoveryClient discoveryClient,
+            @Qualifier(ClientConfig.ORGANIZATION_REST_CLIENT_BUILDER) RestClient.Builder restClientBuilder,
+            OrganizationFeignClient organizationFeignClient,
+            OrganizationClient organizationClient,
+            RestClient discoveryRestClient) {
         this.discoveryClient = discoveryClient;
         this.restClient = restClientBuilder.build();
         this.organizationFeignClient = organizationFeignClient;

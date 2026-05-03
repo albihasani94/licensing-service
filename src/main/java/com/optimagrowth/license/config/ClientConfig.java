@@ -1,11 +1,13 @@
 package com.optimagrowth.license.config;
 
 import com.optimagrowth.license.client.OrganizationClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.restclient.autoconfigure.RestClientBuilderConfigurer;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -17,11 +19,13 @@ import java.time.Duration;
 @Configuration
 public class ClientConfig {
 
+    public static final String ORGANIZATION_REST_CLIENT_BUILDER = "organizationRestClientBuilder";
+
     @Value("${organization.base.url:http://organization-service}")
     private String organizationBaseUrl;
 
     @Bean
-    @LoadBalanced
+    @Primary
     RestClient.Builder restClientBuilder(
             RestClientBuilderConfigurer configurer,
             ClientHttpRequestInterceptor bearerTokenRelayRestClientInterceptor) {
@@ -30,7 +34,17 @@ public class ClientConfig {
     }
 
     @Bean
-    OrganizationClient organizationClient(RestClient.Builder restClientBuilder) {
+    @LoadBalanced
+    RestClient.Builder organizationRestClientBuilder(
+            RestClientBuilderConfigurer configurer,
+            ClientHttpRequestInterceptor bearerTokenRelayRestClientInterceptor) {
+        return configurer.configure(RestClient.builder())
+                .requestInterceptor(bearerTokenRelayRestClientInterceptor);
+    }
+
+    @Bean
+    OrganizationClient organizationClient(
+            @Qualifier(ORGANIZATION_REST_CLIENT_BUILDER) RestClient.Builder restClientBuilder) {
         RestClient client = restClientBuilder
                 .baseUrl(organizationBaseUrl)
                 .build();
