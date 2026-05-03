@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -40,6 +41,9 @@ class LicenseServiceApplicationTests {
 
 	@Test
 	void onlyOrganizationRestClientBuilderIsLoadBalanced() {
+		assertThat(applicationContext.getBeanNamesForType(RestClient.Builder.class))
+				.contains("restClientBuilder")
+				.contains(ClientConfig.ORGANIZATION_REST_CLIENT_BUILDER);
 		assertThat(applicationContext.findAnnotationOnBean("restClientBuilder", LoadBalanced.class))
 				.isNull();
 		assertThat(applicationContext.findAnnotationOnBean(ClientConfig.ORGANIZATION_REST_CLIENT_BUILDER, LoadBalanced.class))

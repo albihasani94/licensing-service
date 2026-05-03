@@ -3,11 +3,11 @@ package com.optimagrowth.license.config;
 import com.optimagrowth.license.client.OrganizationClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.restclient.autoconfigure.RestClientBuilderConfigurer;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -24,21 +24,13 @@ public class ClientConfig {
     @Value("${organization.base.url:http://organization-service}")
     private String organizationBaseUrl;
 
-    @Bean
-    @Primary
-    RestClient.Builder restClientBuilder(
-            RestClientBuilderConfigurer configurer,
-            ClientHttpRequestInterceptor bearerTokenRelayRestClientInterceptor) {
-        return configurer.configure(RestClient.builder())
-                .requestInterceptor(bearerTokenRelayRestClientInterceptor);
-    }
-
-    @Bean
+    @Bean(defaultCandidate = false)
+    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     @LoadBalanced
     RestClient.Builder organizationRestClientBuilder(
-            RestClientBuilderConfigurer configurer,
+            RestClient.Builder restClientBuilder,
             ClientHttpRequestInterceptor bearerTokenRelayRestClientInterceptor) {
-        return configurer.configure(RestClient.builder())
+        return restClientBuilder
                 .requestInterceptor(bearerTokenRelayRestClientInterceptor);
     }
 

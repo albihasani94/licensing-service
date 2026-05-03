@@ -37,7 +37,7 @@ public class OrganizationLookupService {
             @Qualifier(ClientConfig.ORGANIZATION_REST_CLIENT_BUILDER) RestClient.Builder restClientBuilder,
             OrganizationFeignClient organizationFeignClient,
             OrganizationClient organizationClient,
-            RestClient discoveryRestClient) {
+            @Qualifier("discoveryRestClient") RestClient discoveryRestClient) {
         this.discoveryClient = discoveryClient;
         this.restClient = restClientBuilder.build();
         this.organizationFeignClient = organizationFeignClient;
