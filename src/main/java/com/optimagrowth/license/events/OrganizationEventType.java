@@ -10,5 +10,9 @@ public enum OrganizationEventType {
     UPDATED,
 
     @JsonProperty("organization.deleted")
-    DELETED
+    DELETED;
+
+    public boolean invalidatesCache() {
+        return this == UPDATED || this == DELETED;
+    }
 }

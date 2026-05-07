@@ -12,6 +12,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,8 @@ import java.util.function.LongFunction;
 
 @Service
 public class OrganizationLookupService {
+
+    public static final String ORGANIZATIONS_CACHE = "organizations";
 
     private static final Logger LOG = LoggerFactory.getLogger(OrganizationLookupService.class);
 
@@ -49,6 +52,7 @@ public class OrganizationLookupService {
     @Bulkhead(name = "bulkheadLicenseByClientType", fallbackMethod = "organizationLookupFallback")
     @Retry(name = "retryLicenseByClientType", fallbackMethod = "organizationLookupFallback")
     @RateLimiter(name = "licenseByClientType", fallbackMethod = "organizationLookupFallback")
+    @Cacheable(cacheNames = ORGANIZATIONS_CACHE, key = "#organizationId", unless = "#result == null")
     public Organization getOrganization(Long organizationId, ClientType clientType) {
         var client = switch (clientType) {
             case DISCOVERY -> retrieveOrganizationInfoDiscovery();
