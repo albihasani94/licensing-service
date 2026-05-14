@@ -40,6 +40,12 @@ class LicenseServiceApplicationTests {
 	}
 
 	@Test
+	void actuatorPrometheusIsPublic() throws Exception {
+		mockMvc.perform(get("/actuator/prometheus"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
 	void onlyOrganizationRestClientBuilderIsLoadBalanced() {
 		assertThat(applicationContext.getBeanNamesForType(RestClient.Builder.class))
 				.contains("restClientBuilder")
