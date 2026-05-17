@@ -33,7 +33,6 @@
         <docker.image.prefix>ostock</docker.image.prefix>
         <docker.image.name>licensing-service</docker.image.name>
         <docker.tags.latest>latest</docker.tags.latest>
-        <docker.maven.plugin.version>0.48.1</docker.maven.plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -192,37 +191,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>${docker.maven.plugin.version}</version>
+                <configuration>
+                    <image>
+                        <name>${docker.image.prefix}/${docker.image.name}:${project.version}</name>
+                    </image>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>build</id>
                         <phase>install</phase>
                         <goals>
-                            <goal>build</goal>
+                            <goal>build-image-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <images>
-                        <image>
-                            <name>${docker.image.prefix}/${docker.image.name}:${project.version}</name>
-                            <build>
-                                <dockerFile>${project.basedir}/Dockerfile</dockerFile>
-                                <cacheFrom>
-                                    <image>${docker.image.prefix}/${docker.image.name}:latest</image>
-                                </cacheFrom>
-                                <tags>
-                                    <tag>${project.version}</tag>
-                                    <tag>${docker.tags.latest}</tag>
-                                </tags>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
             </plugin>
         </plugins>
     </build>
