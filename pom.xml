@@ -29,6 +29,7 @@
     <properties>
         <java.version>26</java.version>
         <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
         <docker.image.prefix>ostock</docker.image.prefix>
         <docker.image.name>licensing-service</docker.image.name>
         <docker.tags.latest>latest</docker.tags.latest>
@@ -99,6 +100,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-opentelemetry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
