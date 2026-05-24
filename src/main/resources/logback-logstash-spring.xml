@@ -9,7 +9,7 @@
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>
         <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
-        <format>ecs</format>
+            <format>ecs</format>
         </encoder>
     </appender>
 
