@@ -8,8 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -56,6 +58,9 @@ class OrganizationLookupRedisCacheTest {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     @BeforeEach
     void setUp() {
         redisTemplate.execute(FLUSH_DATABASE);
@@ -74,6 +79,8 @@ class OrganizationLookupRedisCacheTest {
                 .contains("\"name\":\"Original Organization\"");
 
         assertThat(organizationCacheTtlSeconds()).isBetween(1L, CACHE_TTL_SECONDS);
+        assertThat(organizationCacheStatistics().getMisses()).isEqualTo(1);
+        assertThat(organizationCacheStatistics().getHits()).isEqualTo(1);
         verify(organizationFeignClient).getOrganization(ORGANIZATION_ID);
         verifyNoMoreInteractions(organizationFeignClient);
     }
@@ -88,6 +95,10 @@ class OrganizationLookupRedisCacheTest {
 
     private Long organizationCacheTtlSeconds() {
         return redisTemplate.getExpire(organizationCacheKey());
+    }
+
+    private org.springframework.data.redis.cache.CacheStatistics organizationCacheStatistics() {
+        return ((RedisCache) cacheManager.getCache(OrganizationLookupService.ORGANIZATIONS_CACHE)).getStatistics();
     }
 
     private static String organizationCacheKey() {

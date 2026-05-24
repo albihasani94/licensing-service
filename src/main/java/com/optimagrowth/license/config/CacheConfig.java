@@ -20,9 +20,11 @@ public class CacheConfig {
     @Bean
     RedisCacheManagerBuilderCustomizer organizationCacheCustomizer(
             @Value("${licensing.cache.organizations.time-to-live:10m}") Duration organizationCacheTtl) {
-        return builder -> builder.withCacheConfiguration(
-                OrganizationLookupService.ORGANIZATIONS_CACHE,
-                organizationCacheConfiguration(organizationCacheTtl));
+        return builder -> builder
+                .enableStatistics()
+                .withCacheConfiguration(
+                        OrganizationLookupService.ORGANIZATIONS_CACHE,
+                        organizationCacheConfiguration(organizationCacheTtl));
     }
 
     static RedisCacheConfiguration organizationCacheConfiguration(Duration organizationCacheTtl) {
