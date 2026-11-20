@@ -1,6 +1,6 @@
 services:
   licensing_db:
-    image: postgres:18-alpine
+    image: postgres:19-alpine
     ports:
       - "15433:5432"
     environment:
